@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+   - docker build -t elliottbignell/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run elliottbignell/react-test npm test -- --coverage
+
+after_success:
+    -   docker build -t elliottbignell/multi-client ./client
+    -   docker build -t elliottbignell/multi-nginx ./nginx
+    -   docker build -t elliottbignell/multi-server ./server
+    -   docker build -t elliottbignell/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to docker hub
+    - docker push elliottbignell/multi-client
+    - docker push elliottbignell/multi-nginx 
+    - docker push elliottbignell/multi-server
+    - docker push elliottbignell/multi-worker
